@@ -33,51 +33,50 @@ class _CityFormState extends State<CityForm> {
       appBar: AppBar(
         title: const Text('Enter a city'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Form(
-              key: _formKey,
-              child: Column(
-                children: <Widget>[
-                  TextFormField(
-                    controller: _controller,
-                    decoration: const InputDecoration(labelText: 'City'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer une ville';
-                      }
-                      final regex = RegExp(r'^[a-zA-Z\s]*$');
-                      if (!regex.hasMatch(value)) {
-                        return 'Veuillez entrer une ville valide';
-                      }
-                      return null;
-                    },
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState != null &&
-                          _formKey.currentState!.validate()) {
-                        setState(() {
-                          _future = _getCityWeather(_controller.text);
-                        });
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Veuillez entrer une ville valide.'),
-                            duration: Duration(seconds: 4),
-                          ),
-                        );
-                      }
-                    },
-                    child: const Text('Submit'),
-                  ),
-                ],
-              ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                TextFormField(
+                  controller: _controller,
+                  decoration: const InputDecoration(labelText: 'City'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer une ville';
+                    }
+                    final regex = RegExp(r'^[a-zA-Z\s]*$');
+                    if (!regex.hasMatch(value)) {
+                      return 'Veuillez entrer une ville valide';
+                    }
+                    return null;
+                  },
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState != null &&
+                        _formKey.currentState!.validate()) {
+                      setState(() {
+                        _future = _getCityWeather(_controller.text);
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Veuillez entrer une ville valide.'),
+                          duration: Duration(seconds: 4),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
             ),
-            FutureBuilder<Map<String, dynamic>>(
+          ),
+          Flexible(
+            child: FutureBuilder<Map<String, dynamic>>(
               future: _future,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -102,28 +101,30 @@ class _CityFormState extends State<CityForm> {
                       Text(weatherData.main),
                       Text(weatherData.temp.toString()),
                       const SizedBox(height: 20),
-                      FlutterMap(
-                        options: MapOptions(
-                          initialCenter:
-                              LatLng(cityData.latitude, cityData.longitude),
-                          initialZoom: 13.0,
+                      Expanded(
+                        child: FlutterMap(
+                          options: MapOptions(
+                            initialCenter:
+                                LatLng(cityData.latitude, cityData.longitude),
+                            initialZoom: 13.0,
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate:
+                                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName: 'com.example.app',
+                            ),
+                            RichAttributionWidget(
+                              attributions: [
+                                TextSourceAttribution(
+                                  'OpenStreetMap contributors',
+                                  onTap: () => (Uri.parse(
+                                      'https://openstreetmap.org/copyright')),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        children: [
-                          TileLayer(
-                            urlTemplate:
-                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            userAgentPackageName: 'com.example.app',
-                          ),
-                          RichAttributionWidget(
-                            attributions: [
-                              TextSourceAttribution(
-                                'OpenStreetMap contributors',
-                                onTap: () => (Uri.parse(
-                                    'https://openstreetmap.org/copyright')),
-                              ),
-                            ],
-                          ),
-                        ],
                       ),
                     ],
                   );
@@ -132,8 +133,8 @@ class _CityFormState extends State<CityForm> {
                 }
               },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
