@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:meteo/city_service.dart';
 import 'package:meteo/weather_service.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class CityForm extends StatefulWidget {
   const CityForm({super.key});
 
   @override
   State<CityForm> createState() => _CityFormState();
-
-  void setState(Null Function() param0) {}
 }
 
 class _CityFormState extends State<CityForm> {
@@ -18,7 +18,6 @@ class _CityFormState extends State<CityForm> {
 
   Future<Map<String, dynamic>> _getCityWeather(String city) async {
     var responseCity = await fetchCity(city);
-
     var responseWeather =
         await fetchWeather(responseCity.latitude, responseCity.longitude);
 
@@ -48,7 +47,7 @@ class _CityFormState extends State<CityForm> {
                     decoration: const InputDecoration(labelText: 'City'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Veuiller entrer une ville';
+                        return 'Veuillez entrer une ville';
                       }
                       final regex = RegExp(r'^[a-zA-Z\s]*$');
                       if (!regex.hasMatch(value)) {
@@ -94,12 +93,38 @@ class _CityFormState extends State<CityForm> {
                   });
                   return Container();
                 } else if (snapshot.hasData) {
+                  var cityData = snapshot.data!['cityData'];
+                  var weatherData = snapshot.data!['weatherData'];
                   return Column(
                     children: [
-                      Text(snapshot.data!['cityData'].name),
-                      Text(snapshot.data!['cityData'].country),
-                      Text(snapshot.data!['weatherData'].main),
-                      Text(snapshot.data!['weatherData'].temp.toString()),
+                      Text(cityData.name),
+                      Text(cityData.country),
+                      Text(weatherData.main),
+                      Text(weatherData.temp.toString()),
+                      const SizedBox(height: 20),
+                      FlutterMap(
+                        options: MapOptions(
+                          initialCenter:
+                              LatLng(cityData.latitude, cityData.longitude),
+                          initialZoom: 13.0,
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.example.app',
+                          ),
+                          RichAttributionWidget(
+                            attributions: [
+                              TextSourceAttribution(
+                                'OpenStreetMap contributors',
+                                onTap: () => (Uri.parse(
+                                    'https://openstreetmap.org/copyright')),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ],
                   );
                 } else {
