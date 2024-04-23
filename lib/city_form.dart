@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meteo/city_service.dart';
+import 'package:meteo/location.dart';
 import 'package:meteo/weather_service.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -13,10 +14,8 @@ class CityForm extends StatefulWidget {
 
 class _CityFormState extends State<CityForm> {
   final TextEditingController _controllerName = TextEditingController();
-  final TextEditingController _controllerLatitude = TextEditingController();
-  final TextEditingController _controllerLongitude = TextEditingController();
+  LatLng _currentLocation = const LatLng(0, 0);
   final _formKeyName = GlobalKey<FormState>();
-  final _formKeyCoordinates = GlobalKey<FormState>();
   Future<Map<String, dynamic>>? _future;
 
   Future<Map<String, dynamic>> _getCityWeatherByName(String city) async {
@@ -72,6 +71,7 @@ class _CityFormState extends State<CityForm> {
                         _formKeyName.currentState!.validate()) {
                       setState(() {
                         _future = _getCityWeatherByName(_controllerName.text);
+                        _currentLocation = const LatLng(0, 0);
                       });
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -87,65 +87,22 @@ class _CityFormState extends State<CityForm> {
               ],
             ),
           ),
-          Form(
-            key: _formKeyCoordinates,
-            child: Column(
-              children: <Widget>[
-                Column(
-                  children: [
-                    TextFormField(
-                      controller: _controllerLatitude,
-                      decoration: const InputDecoration(labelText: 'Latitude'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer une coordonnée';
-                        }
-                        final regex = RegExp(r'^[0-9]+(\.[0-9]+)?$');
-                        if (!regex.hasMatch(value)) {
-                          return 'Veuillez entrer une coordonnée valide';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _controllerLongitude,
-                      decoration: const InputDecoration(labelText: 'Longitude'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer une coordonnée';
-                        }
-                        final regex = RegExp(r'^[0-9]+(\.[0-9]+)?$');
-                        if (!regex.hasMatch(value)) {
-                          return 'Veuillez entrer une coordonnée valide';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKeyCoordinates.currentState != null &&
-                        _formKeyCoordinates.currentState!.validate()) {
-                      setState(() {
-                        _future = _getCityWeatherByCoordinates(
-                            double.parse(_controllerLatitude.text),
-                            double.parse(_controllerLongitude.text));
-                      });
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content:
-                              Text('Veuillez entrer des coordonnées valides.'),
-                          duration: Duration(seconds: 4),
-                        ),
-                      );
-                    }
-                  },
-                  child: const Text('Submit'),
-                ),
-              ],
-            ),
+          LocationWidget(
+            onLocationObtained: (latitude, longitude) {
+              setState(() {
+                _currentLocation = LatLng(latitude, longitude);
+              });
+              _future = _getCityWeatherByCoordinates(latitude, longitude);
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: _currentLocation.latitude != 0.0 &&
+                    _currentLocation.longitude != 0.0
+                ? Text(
+                    'Lat: ${_currentLocation.latitude}, Long: ${_currentLocation.longitude}',
+                  )
+                : Container(),
           ),
           Flexible(
             child: FutureBuilder<Map<String, dynamic>>(
@@ -182,8 +139,7 @@ class _CityFormState extends State<CityForm> {
                           options: MapOptions(
                             initialCenter: cityData != null
                                 ? LatLng(cityData.latitude, cityData.longitude)
-                                : LatLng(double.parse(_controllerLatitude.text),
-                                    double.parse(_controllerLongitude.text)),
+                                : _currentLocation,
                             initialZoom: 13.0,
                           ),
                           children: [
