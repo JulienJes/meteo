@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_dotenv: ^5.1.0
+  flutter_launcher_icons: ^0.13.1
   flutter_map: ^6.1.0
   flutter_native_splash: ^2.4.0
   geolocator: ^11.0.0
@@ -25,3 +26,26 @@ flutter:
 
   assets:
     - .env
+    - images/
+
+flutter_native_splash:
+  color: "#42a5f5"
+  image: images/meteo.png
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "images/meteo.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "images/meteo.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "images/meteo.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "images/meteo.png"
